@@ -1,8 +1,3 @@
-# Code source: Gaël Varoquaux
-#              Andreas Müller
-# Modified for documentation by Jaques Grobler
-# License: BSD 3 clause
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -10,28 +5,21 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import make_classification
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 
 h = .02  # step size in the mesh
 
-names = ["Nearest Neighbors", "Decision Tree", "Random Forest", "Naive Bayes"]
+names = ["Nearest Neighbors", "Decision Tree", "Random Forest",  "Neural Net", "Naive Bayes"]
 
-classifiers = [
-    KNeighborsClassifier(3),
-    DecisionTreeClassifier(max_depth=5),
-    RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1),
-    GaussianNB()]
+classifiers = [ KNeighborsClassifier(3), DecisionTreeClassifier(max_depth=7),
+                RandomForestClassifier(max_depth=7, n_estimators=12, max_features=2),
+                MLPClassifier(alpha=1, max_iter=1000), GaussianNB() ]
 
-X, y = make_classification(n_features=5, n_redundant=0, n_informative=5, random_state=1, n_clusters_per_class=1)
-rng = np.random.RandomState(2)
-X += 2 * rng.uniform(size=X.shape)
-linearly_separable = (X, y)
-
-data = pd.read_csv("fire_data_2011.csv")
+data = pd.read_csv("data/fire_data_2013.csv")
 
 # uses a dict to convert from tree genus i.e. "Pinu", "Pice",... to 0, 1,...
 counter = 0
@@ -43,88 +31,87 @@ for i in data.iterrows():
         tree_count_dict[i[1]["tree_genus"]] = counter
         counter += 1
 
+# replace tree genus with ID and clamp fire value to 0 (no fire) or 1 (fire)
 data = data.copy().replace(to_replace=tree_count_dict)
 data = data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
-print(data)
 
+print("\n\t\t\tORIGINAL DATA:\n", data)
+
+# outputs a heatmap with feature correlations
 correlation = data.corr()
 sns.heatmap(correlation, annot = True)
-ds = data.to_numpy()
 
+ds = data.to_numpy()
 figure = plt.figure(figsize=(27, 9))
 i = 1
 
-# preprocess dataset, split into training and test part
-# X, y = ds[:, (3,5)], ds[:, 5]
-
+# X is a vertical slice of a tuple of features, y is our classifier variable BURNCLAS
 X, y = ds[:, (2, 3)], ds[:, 5]
 
-# print(X.shape, y.shape)
+# preprocess dataset, split into training and test part
 X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.4, random_state=42)
 
-
+# getting min and max values to determine mesh resolution
 x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
 y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 
 # just plot the dataset first
-cm = plt.cm.inferno
+colour_manager = plt.cm.inferno
 cm_bright = ListedColormap(['#0000FF','#F0FF00','#FF0000'])
-ax = plt.subplot(1, len(classifiers) + 1, i)
+axis = plt.subplot(1, len(classifiers) + 1, i)
 
-ax.set_title("Input data")
+axis.set_title("Input data")
 
 # Plot the training points
-ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors='k')
+axis.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors='k')
 
 # Plot the testing points
-ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.6, edgecolors='k')
-ax.set_xlim(xx.min(), xx.max())
-ax.set_ylim(yy.min(), yy.max())
-ax.set_xticks(())
-ax.set_yticks(())
+axis.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, alpha=0.6, edgecolors='k')
+axis.set_xlim(xx.min(), xx.max())
+axis.set_ylim(yy.min(), yy.max())
+axis.set_xticks(())
+axis.set_yticks(())
 i += 1
 
 # iterate over classifiers
-for name, clf in zip(names, classifiers):
-    print(name, ": Progress 1/3")
-    ax = plt.subplot(1, len(classifiers) + 1, i)
-    clf.fit(X_train, y_train.astype('int'))
-    score = clf.score(X_test, y_test)
-
-    print(xx.shape, yy.shape, X_train.shape, y_train.shape)
+for name, classifier in zip(names, classifiers):
+    print(name, ":\t\t Progress 1/3")
+    axis = plt.subplot(1, len(classifiers) + 1, i)
+    classifier.fit(X_train, y_train.astype('int'))
 
     # Plot the decision boundary. For that, we will assign a color to each
     # point in the mesh [x_min, x_max]x[y_min, y_max].
-    if hasattr(clf, "decision_function"):
-        Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+    if hasattr(classifier, "decision_function"):
+        Z = classifier.decision_function(np.c_[xx.ravel(), yy.ravel()])
     else:
-        Z = clf.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
+        Z = classifier.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
 
     # Put the result into a color plot
     if i == 3:
         Z = Z.reshape(xx.shape[0], xx.shape[1])
     else:
         Z = Z.reshape(xx.shape[0], xx.shape[1])
-    ax.contourf(xx, yy, Z, cmap=cm, alpha=.8)
+    axis.contourf(xx, yy, Z, cmap=colour_manager, alpha=.8)
 
-    print(name, ": Progress 2/3")
+    print(name, ":\t\t Progress 2/3")
 
     # Plot the training points
-    ax.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors='k')
+    axis.scatter(X_train[:, 0], X_train[:, 1], c=y_train, cmap=cm_bright, edgecolors='k')
 
     # Plot the testing points
-    ax.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k', alpha=0.6)
+    axis.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k', alpha=0.6)
 
-    ax.set_xlim(xx.min(), xx.max())
-    ax.set_ylim(yy.min(), yy.max())
-    ax.set_xticks(())
-    ax.set_yticks(())
-    print(name, ": Progress 3/3")
+    axis.set_xlim(xx.min(), xx.max())
+    axis.set_ylim(yy.min(), yy.max())
+    axis.set_xticks(())
+    axis.set_yticks(())
+    print(name, ":\t\t Progress 3/3\n")
 
-    ax.set_title(name)
-    ax.text(xx.max() - .3, yy.min() + .3, ('%.2f' % score).lstrip('0'), size=15, horizontalalignment='right')
+    axis.set_title(name)
+    accuracy = classifier.score(X_test, y_test)
+    axis.text(xx.max() - .3, yy.min() + .3, ('%.2f' % accuracy).lstrip('0'), size=15, horizontalalignment='right')
     i += 1
 
 plt.tight_layout()
