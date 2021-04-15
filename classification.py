@@ -44,10 +44,11 @@ for i in data.iterrows():
         counter += 1
 
 data = data.copy().replace(to_replace=tree_count_dict)
+data = data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
 print(data)
 
 correlation = data.corr()
-sns.clustermap(correlation, annot = True)
+sns.heatmap(correlation, annot = True)
 ds = data.to_numpy()
 
 figure = plt.figure(figsize=(27, 9))
@@ -56,7 +57,7 @@ i = 1
 # preprocess dataset, split into training and test part
 # X, y = ds[:, (3,5)], ds[:, 5]
 
-X, y = ds[:, 2:4], ds[:, 5]
+X, y = ds[:, (2, 3)], ds[:, 5]
 
 # print(X.shape, y.shape)
 X = StandardScaler().fit_transform(X)
