@@ -6,7 +6,32 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
-clf = RandomForestClassifier(max_depth=7, n_estimators=12, max_features=5)
+def test_classifier_parameters():
+    for i in range(1, 6):
+        accuracy_avg = 0
+        clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=i)
+        for j in range(0, 75):
+            clf.fit(X_train, y_train.astype('int'))
+            accuracy = clf.score(X_test, y_test)
+            accuracy_avg += accuracy
+            # print("Accuracy of decision tree classifier:", accuracy * 100, "%")
+        print("Average accuracy for n=", i, "features:\t", accuracy_avg * 100 / 75, "%")
+
+
+def output_to_pickle(output_clf):
+    pickle.dump(output_clf, open("data/model.pickle", 'wb'))
+
+
+def load_from_pickle():
+    clf2 = pickle.load(open("data/model.pickle", 'rb'))
+    return clf2
+
+
+def predict_from_pickle(pickled_clf, test_instances):
+    pickled_clf.predict(test_instances[:, 0:5])
+
+
+clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=3)
 
 data = pd.read_csv("data/fire_data_2015.csv")
 
@@ -28,20 +53,17 @@ print("\n\t\t\tORIGINAL DATA:\n", data)
 
 ds = data.to_numpy()
 
-# X is a vertical slice of a tuple of features, y is our classifier variable BURNCLAS
+# X is all features besides the class variable, y is our classifier variable BURNCLAS
 X, y = ds[:, 0:5], ds[:, 5]
 
 # preprocess dataset, split into training and test part
 X = StandardScaler().fit_transform(X)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.4, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=42)
 
-# getting min and max values to determine mesh resolution
-x_min, x_max = X[:, 0].min() - .5, X[:, 0].max() + .5
-y_min, y_max = X[:, 1].min() - .5, X[:, 1].max() + .5
-
+# trains the model and outputs accuracy against test data
 clf.fit(X_train, y_train.astype('int'))
-
-print(X_test.ravel().shape, y_test.ravel().shape)
 accuracy = clf.score(X_test, y_test)
+print("Accuracy:\t", accuracy * 100, "%")
 
-print("Accuracy of decision tree classifier:", accuracy * 100, "%")
+# output trained model
+output_to_pickle(clf)
