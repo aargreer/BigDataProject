@@ -1,3 +1,4 @@
+import pickle
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -18,7 +19,7 @@ classifiers = [ KNeighborsClassifier(7), DecisionTreeClassifier(max_depth=7),
                 RandomForestClassifier(max_depth=7, n_estimators=12, max_features=2),
                 MLPClassifier(alpha=1, max_iter=1000), GaussianNB() ]
 
-data = pd.read_csv("data/fire_data_2013.csv")
+data = pd.read_csv("data/fire_data_2014.csv")
 
 # uses a dict to convert from tree genus i.e. "Pinu", "Pice",... to 0, 1,...
 counter = 0
@@ -45,7 +46,7 @@ figure = plt.figure(figsize=(27, 9))
 i = 1
 
 # X is a vertical slice of a tuple of features, y is our classifier variable BURNCLAS
-X, y = ds[:, (2, 3)], ds[:, 5]
+X, y = ds[:, (2,3)], ds[:, 5]
 
 # preprocess dataset, split into training and test part
 X = StandardScaler().fit_transform(X)
@@ -80,7 +81,7 @@ for name, classifier in zip(names, classifiers):
     axis = plt.subplot(1, len(classifiers) + 1, i)
     classifier.fit(X_train, y_train.astype('int'))
 
-    # Plot the decision boundary; assigning a color to each point in the mesh [x_min, x_max]x[y_min, y_max].
+    # Plot the decision boundary; assigning a color to each point in the mesh [x_min, x_max] x [y_min, y_max].
     if hasattr(classifier, "decision_function"):
         Z = classifier.decision_function(np.c_[xx.ravel(), yy.ravel()])
     else:
