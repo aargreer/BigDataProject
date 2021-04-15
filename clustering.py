@@ -76,13 +76,13 @@ def assign_centroids():
     # inserts cluster assignment column;
     # if column already exists, catches exception and removes the column before insertion
     try:
-        data.insert(4, "ClusterID", cluster_ids)
+        data.insert(6, "ClusterID", cluster_ids)
     except ValueError:
         data.drop(columns="ClusterID", axis=1, inplace=True)
-        data.insert(4, "ClusterID", cluster_ids)
+        data.insert(6, "ClusterID", cluster_ids)
     except IndexError:
         data.drop(columns="ClusterID", axis=1, inplace=True)
-        data.insert(4, "ClusterID", cluster_ids)
+        data.insert(6, "ClusterID", cluster_ids)
     return cluster_ids
 
 
@@ -96,7 +96,7 @@ def recalculate_clusters():
         centroids[i] = cluster.mean()
 
 
-data = pd.read_csv("2011_fire_data.csv")
+data = pd.read_csv("data/fire_data_2011.csv")
 
 # uses a dict to convert from tree genus i.e. "Pinu", "Pice",... to 0, 1,...
 counter = 0
@@ -145,4 +145,4 @@ for i in range(0, k):
 
 print("\n\n", data)
 
-data.to_csv(".\data\clustered_data.csv")
+data.to_csv("./data/fire_data_2011_clustered.csv")
