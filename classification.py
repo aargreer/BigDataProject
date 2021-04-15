@@ -12,10 +12,9 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 
 h = .02  # step size in the mesh
-
 names = ["Nearest Neighbors", "Decision Tree", "Random Forest",  "Neural Net", "Naive Bayes"]
 
-classifiers = [ KNeighborsClassifier(3), DecisionTreeClassifier(max_depth=7),
+classifiers = [ KNeighborsClassifier(7), DecisionTreeClassifier(max_depth=7),
                 RandomForestClassifier(max_depth=7, n_estimators=12, max_features=2),
                 MLPClassifier(alpha=1, max_iter=1000), GaussianNB() ]
 
@@ -81,18 +80,14 @@ for name, classifier in zip(names, classifiers):
     axis = plt.subplot(1, len(classifiers) + 1, i)
     classifier.fit(X_train, y_train.astype('int'))
 
-    # Plot the decision boundary. For that, we will assign a color to each
-    # point in the mesh [x_min, x_max]x[y_min, y_max].
+    # Plot the decision boundary; assigning a color to each point in the mesh [x_min, x_max]x[y_min, y_max].
     if hasattr(classifier, "decision_function"):
         Z = classifier.decision_function(np.c_[xx.ravel(), yy.ravel()])
     else:
         Z = classifier.predict_proba(np.c_[xx.ravel(), yy.ravel()])[:, 1]
 
     # Put the result into a color plot
-    if i == 3:
-        Z = Z.reshape(xx.shape[0], xx.shape[1])
-    else:
-        Z = Z.reshape(xx.shape[0], xx.shape[1])
+    Z = Z.reshape(xx.shape[0], xx.shape[1])
     axis.contourf(xx, yy, Z, cmap=colour_manager, alpha=.8)
 
     print(name, ":\t\t Progress 2/3")
@@ -103,10 +98,12 @@ for name, classifier in zip(names, classifiers):
     # Plot the testing points
     axis.scatter(X_test[:, 0], X_test[:, 1], c=y_test, cmap=cm_bright, edgecolors='k', alpha=0.6)
 
+    # setting bounds for subplots
     axis.set_xlim(xx.min(), xx.max())
     axis.set_ylim(yy.min(), yy.max())
     axis.set_xticks(())
     axis.set_yticks(())
+
     print(name, ":\t\t Progress 3/3\n")
 
     axis.set_title(name)
@@ -114,5 +111,6 @@ for name, classifier in zip(names, classifiers):
     axis.text(xx.max() - .3, yy.min() + .3, ('%.2f' % accuracy).lstrip('0'), size=15, horizontalalignment='right')
     i += 1
 
+# display output
 plt.tight_layout()
 plt.show()
