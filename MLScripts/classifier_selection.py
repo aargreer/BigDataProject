@@ -21,6 +21,24 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.naive_bayes import GaussianNB
 
+
+def preprocess(unprocessed_data):
+    # uses a dict to convert from tree genus ("Pinu", "Pice",...) to genus IDs (0, 1,...)
+    counter = 0
+    tree_count_dict = {}
+    for i in unprocessed_data.iterrows():
+        try:
+            tree_count_dict[i[1]["tree_genus"]]
+        except KeyError:
+            tree_count_dict[i[1]["tree_genus"]] = counter
+            counter += 1
+
+    # replace tree genus with ID and clamp fire value to 0 (no fire) or 1 (fire)
+    processed_data = unprocessed_data.copy().replace(to_replace=tree_count_dict)
+    processed_data = processed_data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
+    return processed_data
+
+
 h = .02  # step size in the mesh
 names = ["Nearest Neighbors", "Decision Tree", "Random Forest",  "Neural Net", "Naive Bayes"]
 
@@ -28,21 +46,7 @@ classifiers = [ KNeighborsClassifier(5), DecisionTreeClassifier(max_depth=11),
                 RandomForestClassifier(max_depth=11, n_estimators=20, max_features=2),
                 MLPClassifier(alpha=1, max_iter=2000), GaussianNB() ]
 
-data = pd.read_csv("data/fire_data_full.csv")
-
-# uses a dict to convert from tree genus i.e. "Pinu", "Pice",... to 0, 1,...
-counter = 0
-tree_count_dict = {}
-for i in data.iterrows():
-    try:
-        tree_count_dict[i[1]["tree_genus"]]
-    except KeyError:
-        tree_count_dict[i[1]["tree_genus"]] = counter
-        counter += 1
-
-# replace tree genus with ID and clamp fire value to 0 (no fire) or 1 (fire)
-data = data.copy().replace(to_replace=tree_count_dict)
-data = data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
+data = preprocess(pd.read_csv("../data/fire_data_full.csv"))
 
 print("\n\t\t\tORIGINAL DATA:\n", data)
 

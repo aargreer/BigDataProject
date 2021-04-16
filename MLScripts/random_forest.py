@@ -68,18 +68,18 @@ def preprocess(unprocessed_data):
 
 # save model to disk
 def output_to_pickle(output_clf):
-    pickle.dump(output_clf, open("data/model.pickle", 'wb'))
+    pickle.dump(output_clf, open("../data/model.pickle", 'wb'))
 
 
 # load model from disk
 def load_from_pickle():
-    new_clf = pickle.load(open("data/model.pickle", 'rb'))
+    new_clf = pickle.load(open("../data/model.pickle", 'rb'))
     return new_clf
 
 
 # init classifier and data; prints the data
 clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=2)
-data = preprocess(pd.read_csv("data/fire_data_2015.csv"))
+data = preprocess(pd.read_csv("../data/fire_data_2015.csv"))
 print("\n\t\t\tORIGINAL DATA:\n", data)
 
 ds = data.to_numpy()
@@ -103,7 +103,7 @@ display_roc_curve(clf.predict_proba(np.c_[X_test[:, :4], y_test.ravel()])[:, 1],
 output_to_pickle(clf)
 
 # loading data from 2011 to test accuracy of models outside of a trained year
-data_2011 = preprocess(pd.read_csv("data/fire_data_2011.csv"))
+data_2011 = preprocess(pd.read_csv("../data/fire_data_2011.csv"))
 test_data = data_2011.copy().drop(labels="BURNCLAS", axis=1).to_numpy()
 actual_outcomes = data_2011["BURNCLAS"].to_numpy()
 
@@ -140,4 +140,4 @@ print("\nTotal cases:", actual_outcomes.shape[0])
 
 # append column with predicted class to original data; output to file
 output_data = data_2011.copy().assign(PredictedClass=lambda x: predictions_rounded)
-output_data.to_csv("data/fire_data_2011_with_predictions.csv")
+output_data.to_csv("../data/fire_data_2011_with_predictions.csv")
