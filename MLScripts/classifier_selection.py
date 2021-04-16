@@ -1,4 +1,13 @@
-import pickle
+# Code source: Gaël Varoquaux
+#              Andreas Müller
+# https://scikit-learn.org/stable/auto_examples/classification/plot_classifier_comparison.html#sphx-glr-auto-examples-
+# classification-plot-classifier-comparison-py
+#
+# Modified for documentation by Jaques Grobler
+# License: BSD 3 clause
+
+# Modified by Andrew Greer and Troy Walther, only used to conveniently plot and pick classifier algorithms
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
