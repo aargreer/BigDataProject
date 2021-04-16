@@ -4,10 +4,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import StandardScaler
 
 
+# function for testing multiple runs using different values of m features (really inefficient hyperparameter tuning)
 def test_classifier_parameters():
     for i in range(1, 6):
         accuracy_avg = 0
@@ -16,10 +17,10 @@ def test_classifier_parameters():
             clf.fit(X_train, y_train.astype('int'))
             accuracy = clf.score(X_test, y_test)
             accuracy_avg += accuracy
-            # print("Accuracy of decision tree classifier:", accuracy * 100, "%")
         print("Average accuracy for n=", i, "features:\t", accuracy_avg * 100 / 75, "%")
 
 
+# computes and displays ROC curve using an array for predicted values versus actual values
 def display_roc_curve(predictions, actual_values):
     fpr = dict()
     tpr = dict()
@@ -34,6 +35,7 @@ def display_roc_curve(predictions, actual_values):
     fpr["micro"], tpr["micro"], _ = roc_curve(actual_values.ravel(), y_score.ravel())
     roc_auc["micro"] = auc(fpr["micro"], tpr["micro"])
 
+    # plot the ROC curve
     plt.figure()
     lw = 2
     plt.plot(fpr[2], tpr[2], color='darkorange', lw=lw, label='ROC curve (area = %0.2f)' % roc_auc[2])
@@ -64,7 +66,7 @@ def preprocess(unprocessed_data):
     return processed_data
 
 
-# save model from disk
+# save model to disk
 def output_to_pickle(output_clf):
     pickle.dump(output_clf, open("data/model.pickle", 'wb'))
 
@@ -85,7 +87,7 @@ ds = data.to_numpy()
 # X is all features besides the class variable, y is our classifier variable BURNCLAS
 X, y = ds[:, 0:5], ds[:, 5]
 
-# split into training and test part
+# split into training and test part (feature scaling commented out cause it gave us better results)
 # X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=42)
 
@@ -110,6 +112,7 @@ clf2 = load_from_pickle()
 predictions = clf2.predict_proba(test_data)[:, 1].ravel()
 
 # rounding predictions to 0 or 1 based on confidence threshold
+# (threshold set to 45% confidence as this gave us the best false negativity rate)
 a = []
 max_confidence = np.amax(predictions)
 confidence_threshold = 0.45 * max_confidence
@@ -123,12 +126,13 @@ predictions_rounded = np.array(a)
 
 # display ROC curve
 display_roc_curve(clf2.predict_proba(test_data)[:, 1], actual_outcomes)
+cv_scores = cross_val_score(clf2, test_data, actual_outcomes, cv=5)
 
-# print confusion matrix
+# print confusion matrix andd cross validation scores
 accuracy = accuracy_score(actual_outcomes, predictions_rounded)
+print("\n\n\n5-fold CV results:\nAccuracy:\t", cv_scores.mean(), "\nStd. Deviation:", cv_scores.std())
 tn, fp, fn, tp = confusion_matrix(actual_outcomes, predictions_rounded).ravel()
-print("\n\n\nPredicting on Another Year Accuracy:\t", accuracy * 100, "%")
-print("True positives:", tp)
+print("\nTrue positives:", tp)
 print("True negatives:", tn)
 print("False positives:", fp)
 print("False negatives:", fn)
