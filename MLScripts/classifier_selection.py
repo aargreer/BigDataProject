@@ -46,7 +46,7 @@ classifiers = [ KNeighborsClassifier(5), DecisionTreeClassifier(max_depth=11),
                 RandomForestClassifier(max_depth=11, n_estimators=20, max_features=2),
                 MLPClassifier(alpha=1, max_iter=2000), GaussianNB() ]
 
-data = preprocess(pd.read_csv("../data/fire_data_full.csv"))
+data = preprocess(pd.read_csv("../../data/fire_data_full.csv"))
 
 print("\n\t\t\tORIGINAL DATA:\n", data)
 
