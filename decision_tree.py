@@ -112,7 +112,7 @@ predictions = clf2.predict_proba(test_data)[:, 1].ravel()
 # rounding predictions to 0 or 1 based on confidence threshold
 a = []
 max_confidence = np.amax(predictions)
-confidence_threshold = 0.65 * max_confidence
+confidence_threshold = 0.45 * max_confidence
 for i in predictions:
     # if prediction higher than threshold, output positive case; else negative
     if i >= confidence_threshold:
