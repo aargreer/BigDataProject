@@ -15,11 +15,11 @@ from sklearn.naive_bayes import GaussianNB
 h = .02  # step size in the mesh
 names = ["Nearest Neighbors", "Decision Tree", "Random Forest",  "Neural Net", "Naive Bayes"]
 
-classifiers = [ KNeighborsClassifier(7), DecisionTreeClassifier(max_depth=7),
-                RandomForestClassifier(max_depth=7, n_estimators=12, max_features=2),
-                MLPClassifier(alpha=1, max_iter=1000), GaussianNB() ]
+classifiers = [ KNeighborsClassifier(5), DecisionTreeClassifier(max_depth=11),
+                RandomForestClassifier(max_depth=11, n_estimators=20, max_features=2),
+                MLPClassifier(alpha=1, max_iter=2000), GaussianNB() ]
 
-data = pd.read_csv("data/fire_data_2015_full.csv")
+data = pd.read_csv("data/fire_data_full.csv")
 
 # uses a dict to convert from tree genus i.e. "Pinu", "Pice",... to 0, 1,...
 counter = 0
@@ -46,7 +46,7 @@ figure = plt.figure(figsize=(27, 9))
 i = 1
 
 # X is a vertical slice of a tuple of features, y is our classifier variable BURNCLAS
-X, y = ds[:, (2,3)], ds[:, 9]
+X, y = ds[:, (2,3)], ds[:, 5]
 
 # preprocess dataset, split into training and test part
 X = StandardScaler().fit_transform(X)

@@ -76,7 +76,7 @@ def load_from_pickle():
 
 
 # init classifier and data; prints the data
-clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=3)
+clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=2)
 data = preprocess(pd.read_csv("data/fire_data_2015.csv"))
 print("\n\t\t\tORIGINAL DATA:\n", data)
 
@@ -86,7 +86,7 @@ ds = data.to_numpy()
 X, y = ds[:, 0:5], ds[:, 5]
 
 # split into training and test part
-X = StandardScaler().fit_transform(X)
+# X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=42)
 
 # trains the model and outputs accuracy against test data
@@ -101,22 +101,24 @@ display_roc_curve(clf.predict_proba(np.c_[X_test[:, :4], y_test.ravel()])[:, 1],
 output_to_pickle(clf)
 
 # loading data from 2011 to test accuracy of models outside of a trained year
-data_2011 = preprocess(pd.read_csv("data/fire_data_2015.csv"))
+data_2011 = preprocess(pd.read_csv("data/fire_data_2011.csv"))
 test_data = data_2011.copy().drop(labels="BURNCLAS", axis=1).to_numpy()
 actual_outcomes = data_2011["BURNCLAS"].to_numpy()
 
 # load model from file
 clf2 = load_from_pickle()
-predictions = clf2.predict_proba(test_data)[:, :1].ravel()
+predictions = clf2.predict_proba(test_data)[:, 1].ravel()
 
-# rounding predicted values to 0 or 1 for ease of calculating accuracy
+# rounding predictions to 0 or 1 based on confidence threshold
 a = []
+max_confidence = np.amax(predictions)
+confidence_threshold = 0.65 * max_confidence
 for i in predictions:
-    # if prediction higher than "confidence factor"
-    if i > 0.55:
-        a.append(0)
-    else:
+    # if prediction higher than threshold, output positive case; else negative
+    if i >= confidence_threshold:
         a.append(1)
+    else:
+        a.append(0)
 predictions_rounded = np.array(a)
 
 # display ROC curve
@@ -132,5 +134,6 @@ print("False positives:", fp)
 print("False negatives:", fn)
 print("\nTotal cases:", actual_outcomes.shape[0])
 
+# append column with predicted class to original data; output to file
 output_data = data_2011.copy().assign(PredictedClass=lambda x: predictions_rounded)
 output_data.to_csv("data/fire_data_2011_with_predictions.csv")
