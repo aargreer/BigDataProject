@@ -23,7 +23,6 @@ def test_classifier_parameters():
 def display_roc_curve(predictions, actual_values):
     fpr = dict()
     tpr = dict()
-    # y_score = clf.predict_proba(np.c_[X_test[:, :4], y_test.ravel()])[:, 1]
     y_score = predictions
 
     roc_auc = dict()
@@ -60,28 +59,25 @@ def preprocess(unprocessed_data):
             counter += 1
 
     # replace tree genus with ID and clamp fire value to 0 (no fire) or 1 (fire)
-    output_data = unprocessed_data.copy().replace(to_replace=tree_count_dict)
-    output_data = output_data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
-    return output_data
+    processed_data = unprocessed_data.copy().replace(to_replace=tree_count_dict)
+    processed_data = processed_data.copy().replace(to_replace=[1, 2, 3, 4], value=1)
+    return processed_data
 
 
+# save model from disk
 def output_to_pickle(output_clf):
     pickle.dump(output_clf, open("data/model.pickle", 'wb'))
 
 
+# load model from disk
 def load_from_pickle():
-    clf2 = pickle.load(open("data/model.pickle", 'rb'))
-    return clf2
+    new_clf = pickle.load(open("data/model.pickle", 'rb'))
+    return new_clf
 
 
-def predict_from_pickle(pickled_clf, test_instances):
-    pickled_clf.predict(test_instances[:, 0:5])
-
-
+# init classifier and data; prints the data
 clf = RandomForestClassifier(max_depth=11, n_estimators=20, max_features=3)
-
 data = preprocess(pd.read_csv("data/fire_data_2015.csv"))
-
 print("\n\t\t\tORIGINAL DATA:\n", data)
 
 ds = data.to_numpy()
@@ -89,7 +85,7 @@ ds = data.to_numpy()
 # X is all features besides the class variable, y is our classifier variable BURNCLAS
 X, y = ds[:, 0:5], ds[:, 5]
 
-# preprocess dataset, split into training and test part
+# split into training and test part
 X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.33, random_state=42)
 
@@ -98,6 +94,7 @@ clf.fit(X_train, y_train.astype('int'))
 accuracy = clf.score(X_test, y_test)
 print("\n\n2015 Test-Train Split Accuracy:\t\t", accuracy * 100, "%")
 
+# display ROC curve for RandomForest
 display_roc_curve(clf.predict_proba(np.c_[X_test[:, :4], y_test.ravel()])[:, 1], y_test)
 
 # output trained model
